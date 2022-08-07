@@ -11,6 +11,8 @@ builder.Services.AddDbContext<DataContext>(opts =>
     opts.EnableSensitiveDataLogging();
 });
 
+builder.Services.AddControllers();
+
 #endregion
 
 var app = builder.Build();
@@ -19,7 +21,7 @@ var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
 
-app.UseMiddleware<MyWebAPI.TestMiddleware>();
+app.MapControllers();
 
 SeedData.EnsurePopulated(app);
 
