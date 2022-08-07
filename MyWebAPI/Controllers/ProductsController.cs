@@ -21,20 +21,34 @@ namespace MyWebAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<Product> GetProduct(long id)
+        public async Task<IActionResult> GetProduct(long id)
         {
-            return await _context.Products.FindAsync(id);
+            Product? p = await _context.Products.FindAsync(id);
+            if(p == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return Ok(p);
+            }
         }
 
         [HttpPost]
-        public async Task SaveProduct([FromBody] ProductBindingTarget productBindingTarget)
+        public async Task<IActionResult> SaveProduct(ProductBindingTarget productBindingTarget)
         {
-            await _context.Products.AddAsync(productBindingTarget.ToProduct());
-            await _context.SaveChangesAsync();
+            if (ModelState.IsValid)
+            {
+                Product p = productBindingTarget.ToProduct();
+                await _context.Products.AddAsync(p);
+                await _context.SaveChangesAsync();
+                return Ok(p);
+            }
+            return BadRequest(ModelState);
         }
 
         [HttpPut]
-        public async Task UpdateProduct([FromBody] Product product)
+        public async Task UpdateProduct(Product product)
         {
             _context.Products.Update(product);
             await _context.SaveChangesAsync();
