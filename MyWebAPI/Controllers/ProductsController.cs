@@ -4,7 +4,7 @@ using MyWebAPI.Models;
 namespace MyWebAPI.Controllers
 {
     [ApiController]
-    [Route("/api/{controller}")]
+    [Route("/api/[controller]")]
     public class ProductsController : Controller
     {
         private DataContext _context;
@@ -21,6 +21,8 @@ namespace MyWebAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProduct(long id)
         {
             Product? p = await _context.Products.FindAsync(id);
@@ -35,6 +37,8 @@ namespace MyWebAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SaveProduct(ProductBindingTarget productBindingTarget)
         {
             if (ModelState.IsValid)
