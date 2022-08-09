@@ -19,6 +19,7 @@ builder.Services.AddControllers().AddNewtonsoftJson().AddXmlDataContractSerializ
 builder.Services.Configure<MvcNewtonsoftJsonOptions>(opts =>
 {
     opts.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+    opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
 
 builder.Services.Configure<MvcOptions>(opts =>
