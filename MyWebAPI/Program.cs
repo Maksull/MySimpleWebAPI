@@ -50,7 +50,10 @@ app.UseSwaggerUI(opts =>
     opts.SwaggerEndpoint("/swagger/menu/swagger.json", "MyWebAPI");
 });
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet( "/", async (context) =>
+{
+    context.Response.Redirect("/swagger");
+});
 
 app.MapControllers();
 

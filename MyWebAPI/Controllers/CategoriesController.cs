@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyWebAPI.Models;
 
@@ -22,7 +23,7 @@ namespace MyWebAPI.Controllers
         {
             IEnumerable<Category>? categories = _context.Categories.Include(c => c.Products);
 
-            if(categories != null)
+            if (categories != null)
             {
                 foreach (var c in categories)
                 {
@@ -43,7 +44,7 @@ namespace MyWebAPI.Controllers
         {
             Category? category = await _context.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.CategoryId == id);
 
-            if(category != null)
+            if (category != null)
             {
                 foreach (Product p in category.Products)
                 {
@@ -91,13 +92,29 @@ namespace MyWebAPI.Controllers
         {
             Category? c = await _context.Categories.FindAsync(id);
 
-            if(c != null)
+            if (c != null)
             {
                 _context.Categories.Remove(c);
                 await _context.SaveChangesAsync();
                 return Ok(c);
             }
 
+            return NotFound();
+        }
+
+
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PatchCategory(long id, JsonPatchDocument<Category> patchDoc)
+        {
+            Category? c = await _context.Categories.FindAsync(id);
+            
+            if(c != null)
+            {
+                patchDoc.ApplyTo(c);
+                await _context.SaveChangesAsync();
+                return Ok(c);
+            }
             return NotFound();
         }
     }

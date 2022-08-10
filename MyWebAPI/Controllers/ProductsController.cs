@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyWebAPI.Models;
 
 namespace MyWebAPI.Controllers
 {
     [ApiController]
     [Route("/api/[controller]")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public class ProductsController : Controller
     {
         private DataContext _context;
@@ -15,29 +18,30 @@ namespace MyWebAPI.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<Product> GetProducts()
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetProducts()
         {
-            return _context.Products.AsAsyncEnumerable();
+            if(_context.Products != null)
+            {
+                return Ok(_context.Products);
+            }
+            return NotFound();
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProduct(long id)
         {
             Product? p = await _context.Products.FindAsync(id);
-            if(p == null)
-            {
-                return NotFound();
-            }
-            else
+
+            if(p != null)
             {
                 return Ok(p);
             }
+            return NotFound();
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SaveProduct(ProductBindingTarget productBindingTarget)
         {
@@ -52,17 +56,47 @@ namespace MyWebAPI.Controllers
         }
 
         [HttpPut]
-        public async Task UpdateProduct(Product product)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateProduct(Product product)
         {
-            _context.Products.Update(product);
-            await _context.SaveChangesAsync();
+            if(await _context.Products.ContainsAsync(product))
+            {
+                _context.Products.Update(product);
+                await _context.SaveChangesAsync();
+                return Ok(product);
+            }
+            return NotFound();
         }
 
         [HttpDelete("{id}")]
-        public async Task DeleteProduct(long id)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteProduct(long id)
         {
-            _context.Products.Remove(new Product() { ProductId = id});
-            await _context.SaveChangesAsync();
+            Product? p = await _context.Products.FindAsync(id);
+
+            if(p != null)
+            {
+                _context.Products.Remove(p);
+                await _context.SaveChangesAsync();
+                return Ok(p);
+            }
+            return NotFound();
+        }
+
+
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PatchProduct(long id, JsonPatchDocument<Product> patchDoc)
+        {
+            Product? p = await _context.Products.FindAsync(id);
+
+            if(p != null)
+            {
+                patchDoc.ApplyTo(p);
+                await _context.SaveChangesAsync();
+                return Ok(p);
+            }
+            return NotFound();
         }
     }
 }

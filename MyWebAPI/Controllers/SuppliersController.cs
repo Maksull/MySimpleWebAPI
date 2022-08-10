@@ -18,7 +18,7 @@ namespace MyWebAPI.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSuppliers()
+        public IActionResult GetSuppliers()
         {
             IEnumerable<Supplier>? suppliers =  _context.Suppliers.Include(s => s.Products);
 
@@ -42,7 +42,7 @@ namespace MyWebAPI.Controllers
         public async Task<IActionResult> GetSupplier(long id)
         {
             Supplier? supplier = await _context.Suppliers.Include(s => s.Products).FirstOrDefaultAsync(s => s.SupplierId == id);
-            if(supplier.Products != null)
+            if(supplier != null)
             {
                 foreach(Product p in supplier.Products)
                 {
@@ -99,15 +99,18 @@ namespace MyWebAPI.Controllers
 
 
         [HttpPatch("{id}")]
-        public async Task<Supplier> PatchSupplier(long id, JsonPatchDocument<Supplier> patchDoc)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PatchSupplier(long id, JsonPatchDocument<Supplier> patchDoc)
         {
-            Supplier? supplier = await _context.Suppliers.FindAsync(id);
-            if(supplier != null)
+            Supplier? s = await _context.Suppliers.FindAsync(id);
+
+            if(s != null)
             {
-                patchDoc.ApplyTo(supplier);
+                patchDoc.ApplyTo(s);
                 await _context.SaveChangesAsync();
+                return Ok(s);
             }
-            return supplier;
+            return NotFound();
         }
  
     }
